@@ -1,0 +1,9 @@
+#! postgres-pgdata-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: postgres-pgdata
+    namespace: agent-evaluation-platform
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner

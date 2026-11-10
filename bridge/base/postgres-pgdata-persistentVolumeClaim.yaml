@@ -1,0 +1,18 @@
+#! postgres-pgdata-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: postgres-pgdata
+    namespace: agent-evaluation-platform
+    labels:
+        com.docker.compose.service: postgres
+        com.docker.compose.volume: pgdata
+spec:
+    accessModes:
+        # TODO would need to check which services use this volume
+        - ReadWriteOnce
+    volumeMode: Filesystem
+    resources:
+        requests:
+            storage: 100Mi

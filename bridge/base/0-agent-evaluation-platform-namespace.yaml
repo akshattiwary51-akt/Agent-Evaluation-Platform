@@ -1,0 +1,8 @@
+#! 0-agent-evaluation-platform-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: agent-evaluation-platform
+    labels:
+        com.docker.compose.project: agent-evaluation-platform

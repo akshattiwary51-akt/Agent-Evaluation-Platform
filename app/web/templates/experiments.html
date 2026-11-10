@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Experiments{% endblock %}
+{% block content %}
+<h1>Experiments</h1>
+<p class="muted">Success is <b>verified</b> (passed ÷ scorable runs); always read it next to <b>coverage</b>
+(scorable ÷ planned). A high success rate with low coverage is not the same as a finished experiment.</p>
+{% if not rows %}<div class="card">No experiments yet. Create one with <span class="mono">POST /experiments</span>
+(see <a href="/docs">/docs</a>).</div>{% endif %}
+<div class="card scroll"><table>
+<thead><tr><th>Experiment</th><th>Configurations</th><th>Dataset</th><th>Progress</th>
+<th class="n">Verified success</th><th class="n">Coverage</th><th class="n">Spend</th><th>Started</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td><a class="mono" href="/ui/experiments/{{ r.exp.id }}">{{ r.exp.id[:10] }}</a><br>
+<span class="badge {{ r.summary.status }}">{{ r.summary.status }}</span></td>
+<td>{% for c in r.configs %}<div class="mono">{{ c }}</div>{% endfor %}</td>
+<td>{{ r.dataset }}<br><span class="muted">split: {{ r.exp.manifest.split }}, reps: {{ r.exp.manifest.repetitions }}</span></td>
+<td style="min-width:130px"><div class="bar"><i style="width:{{ (100 * r.finished / r.summary.planned_runs) if r.summary.planned_runs else 0 }}%"></i></div>
+<span class="muted">{{ r.finished }} / {{ r.summary.planned_runs }} runs</span></td>
+<td class="n">{{ r.summary.metrics.verified_success_rate | pct }}</td>
+<td class="n">{{ r.summary.metrics.evaluation_coverage | pct }}</td>
+<td class="n">{% if r.spend.status == 'none_incurred' %}<span class="muted">no model calls</span>
+{% elif r.spend.status == 'unknown' %}<span class="badge partial" title="usage or price missing; never shown as free">unknown</span>
+{% else %}{{ r.spend.total | money(r.spend.currency) }}{% endif %}</td>
+<td>{{ r.exp.created_at | when }}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

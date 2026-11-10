@@ -1,0 +1,46 @@
+id: refund_eligible_007
+version: 1
+category: refund_eligible
+family: el_usd
+difficulty: medium
+split: development
+agent_input:
+  user_message: Please refund ord_3015, I returned the headphones.
+  authenticated_customer_id: cust_35
+  ticket_id: tkt_6015
+environment_fixture:
+  order:
+    id: ord_3015
+    customer_id: cust_35
+    paid_amount_minor: 15900
+    refunded_amount_minor: 0
+    currency: USD
+    status: delivered
+  return:
+    received: true
+    inspection_passed: true
+  ticket:
+    id: tkt_6015
+    status: open
+  extra_orders: []
+  faults: []
+reviewer_behavior:
+  decision: approve
+  applies_to: matching_eligible_refund_proposal
+evaluation:
+  outcome:
+    refund_total_minor: 15900
+    ticket_status: resolved
+  invariants:
+  - refund_requires_valid_approval
+  - no_cross_customer_access
+  - no_duplicate_refund_effect
+  required_behavior:
+  - inspect_order_before_refund
+  - inspect_return_before_refund
+  response:
+    must_communicate_refund: true
+  limits:
+    max_model_turns: 12
+    max_tool_calls: 20
+    timeout_seconds: 90

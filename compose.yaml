@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: evalplatform
+      POSTGRES_PASSWORD: evalplatform
+      POSTGRES_DB: evalplatform
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evalplatform"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.execution.worker"]
+    env_file: .env
+    environment:
+      WORKER_CONCURRENCY: "2"
+      LEASE_SECONDS: "60"
+    stop_grace_period: 120s   # SIGTERM lets in-flight attempts finish before exit
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+
+volumes:
+  pgdata:
+
+networks:
+  backend:

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Benchmark results{% endblock %}
+{% block content %}
+<h1>Benchmark results</h1>
+<div class="card"><b>No public-benchmark results have been imported yet.</b>
+<p class="muted">Public benchmarks (such as BFCL and τ²-bench) arrive in Phase 6. Nothing on this page is a
+benchmark score, and the custom support suite on the other screens must never be presented as one.</p></div>
+<h2>What every imported result will show</h2>
+<div class="card"><ul>
+<li><b>Benchmark identity and version</b>: official repository and pinned commit.</li>
+<li><b>Task selection</b>: which categories or subset, and how many tasks.</li>
+<li><b>Scoring method</b>: <i>official</i> scorer, or <i>custom subset</i> using the documented selection and scoring rules.
+A custom subset is labelled "derived subset evaluation" and is never shown as an official overall score.</li>
+<li><b>Raw report</b>: a link to the preserved raw output.</li>
+<li><b>Exact configuration</b>: model, settings and manifest used for the run.</li>
+</ul></div>
+<p class="muted">Custom-suite results and public-benchmark results stay on separate views by design.</p>
+{% endblock %}

@@ -1,0 +1,55 @@
+#! postgres-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: postgres
+    namespace: agent-evaluation-platform
+    labels:
+        com.docker.compose.project: agent-evaluation-platform
+        com.docker.compose.service: postgres
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: agent-evaluation-platform
+            com.docker.compose.service: postgres
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: agent-evaluation-platform
+                com.docker.compose.service: postgres
+                com.docker.compose.network.backend: "true"
+        spec:
+            containers:
+                - name: postgres
+                  image: postgres:16
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: POSTGRES_DB
+                      value: "evalplatform"
+                    - name: POSTGRES_PASSWORD
+                      value: "evalplatform"
+                    - name: POSTGRES_USER
+                      value: "evalplatform"
+                  livenessProbe:
+                    exec:
+                        command:
+                            - /bin/sh
+                            - -c
+                            - pg_isready -U evalplatform
+                    periodSeconds: 3
+                    timeoutSeconds: 3
+                    failureThreshold: 20
+                  ports:
+                    - name: postgres-5432
+                      containerPort: 5432
+                  volumeMounts:
+                    - name: var-lib-postgresql-data
+                      mountPath: /var/lib/postgresql/data
+            volumes:
+                - name: var-lib-postgresql-data
+                  persistentVolumeClaim:
+                    claimName: postgres-pgdata

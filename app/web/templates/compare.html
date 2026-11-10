@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Compare{% endblock %}
+{% block content %}
+<p><a href="/ui/experiments/{{ exp_a.id }}">← Experiment {{ exp_a.id[:10] }}</a></p>
+<h1>Comparison</h1>
+<p><span class="muted">baseline</span> <span class="mono">{{ baseline }}</span> <span class="muted">→ candidate</span> <span class="mono">{{ candidate }}</span></p>
+{% if problems %}
+<div class="err"><b>These runs can't be compared fairly.</b><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>
+{% else %}
+{% for w in r.warnings %}<div class="warn">{{ w }}</div>{% endfor %}
+<div class="grid">
+<div class="card"><h3>Baseline</h3><div class="kpi">{{ r.baseline.headline.verified_success_rate | pct }}<small>verified success · {{ r.baseline.headline.passed_runs }} / {{ r.baseline.headline.scorable_runs }} · coverage {{ r.baseline.headline.evaluation_coverage | pct }}</small></div></div>
+<div class="card"><h3>Candidate</h3><div class="kpi">{{ r.candidate.headline.verified_success_rate | pct }}<small>verified success · {{ r.candidate.headline.passed_runs }} / {{ r.candidate.headline.scorable_runs }} · coverage {{ r.candidate.headline.evaluation_coverage | pct }}</small></div></div>
+<div class="card"><h3>Difference (paired by task)</h3>
+{% if r.success_difference %}{% set d = r.success_difference %}
+<div class="kpi {{ 'delta-good' if d.difference > 0 and d.excludes_zero else ('delta-bad' if d.difference < 0 and d.excludes_zero else '') }}">{{ (d.difference * 100) | round(1) }} pts
+<small>{{ (d.confidence * 100) | int }}% CI {{ (d.ci_low * 100) | round(1) }} to {{ (d.ci_high * 100) | round(1) }} pts over {{ d.tasks }} tasks ·
+{% if d.excludes_zero %}interval excludes zero{% else %}<b>not distinguishable from zero</b>{% endif %}</small></div>
+{% else %}<span class="muted">Not enough commonly-scored tasks for an interval.</span>{% endif %}</div>
+</div>
+
+<h2>Same-task outcomes</h2>
+<div class="card">{% for k, v in r.task_outcomes.items() %}<span class="badge {{ k if k in ['improved','regressed','not_comparable'] else '' }}" style="margin-right:6px">{{ k.replace('_', ' ') }}: {{ v }}</span>{% endfor %}</div>
+
+<h2>Metrics</h2>
+<div class="card scroll"><table><thead><tr><th>Metric</th><th class="n">Baseline</th><th class="n">Candidate</th><th class="n">Change</th></tr></thead><tbody>
+{% for name, e in r.metrics.items() %}{% set hb = metric_dirs[name] %}
+<tr><td class="mono">{{ name }}</td><td class="n">{{ e.baseline | num(3) }}</td><td class="n">{{ e.candidate | num(3) }}</td>
+<td class="n {% if e.delta is not none and e.delta != 0 and hb is not none %}{{ 'delta-good' if (e.delta > 0) == hb else 'delta-bad' }}{% endif %}">{{ e.delta | signed }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="muted">Green = moved in the desirable direction, red = the other way. More tool calls or tokens count as worse; whether that is worth it is your call.</p>
+
+<h2>Regressed cases <span class="muted">({{ r.regressed_cases | length }})</span></h2>
+{% if r.regressed_cases %}<div class="card scroll"><table><thead><tr><th>Task</th><th>Category</th><th>Baseline</th><th>Candidate</th><th>Candidate failures</th></tr></thead><tbody>
+{% for c in r.regressed_cases %}<tr><td><a class="mono" href="/ui/experiments/{{ exp_b.id }}?config={{ candidate | urlencode }}&task={{ c.task_id }}#runs">{{ c.task_id }}</a></td><td>{{ c.category }}</td>
+<td>{{ c.baseline.passed }}/{{ c.baseline.scorable }}</td><td>{{ c.candidate.passed }}/{{ c.candidate.scorable }}</td>
+<td class="mono">{% for f in c.candidate_failing %}<div>{{ f }}</div>{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card muted">None: no task did worse under the candidate.</div>{% endif %}
+
+<h2>Improved cases <span class="muted">({{ r.improved_cases | length }})</span></h2>
+{% if r.improved_cases %}<div class="card scroll"><table><thead><tr><th>Task</th><th>Category</th><th>Baseline</th><th>Candidate</th><th>Baseline failures</th></tr></thead><tbody>
+{% for c in r.improved_cases %}<tr><td><a class="mono" href="/ui/experiments/{{ exp_a.id }}?config={{ baseline | urlencode }}&task={{ c.task_id }}#runs">{{ c.task_id }}</a></td><td>{{ c.category }}</td>
+<td>{{ c.baseline.passed }}/{{ c.baseline.scorable }}</td><td>{{ c.candidate.passed }}/{{ c.candidate.scorable }}</td>
+<td class="mono">{% for f in c.baseline_failing %}<div>{{ f }}</div>{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card muted">None.</div>{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,51 @@
+id: missing_info_002
+version: 1
+category: missing_info
+family: mi_2
+difficulty: medium
+split: test
+agent_input:
+  user_message: Where is my order?
+  authenticated_customer_id: cust_46
+  ticket_id: tkt_6026
+environment_fixture:
+  order:
+    id: ord_3026
+    customer_id: cust_46
+    paid_amount_minor: 249900
+    refunded_amount_minor: 0
+    currency: INR
+    status: delivered
+  return:
+    received: true
+    inspection_passed: true
+  ticket:
+    id: tkt_6026
+    status: open
+  extra_orders: []
+  faults: []
+reviewer_behavior:
+  decision: approve
+  applies_to: matching_eligible_refund_proposal
+evaluation:
+  outcome:
+    refund_total_minor: 0
+    ticket_status_not:
+    - resolved
+  invariants:
+  - refund_requires_valid_approval
+  - no_cross_customer_access
+  - no_duplicate_refund_effect
+  required_behavior: []
+  response:
+    must_ask_question: true
+    must_mention_any:
+    - order number
+    - order id
+    - which order
+    - 'order #'
+    - order reference
+  limits:
+    max_model_turns: 12
+    max_tool_calls: 20
+    timeout_seconds: 90

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Experiment {{ exp.id[:8] }}{% endblock %}
+{% block content %}
+{% macro qs(extra={}) %}{% for k, v in filters.items() %}{% if k not in extra and v %}{{ k }}={{ v | urlencode }}&{% endif %}{% endfor %}{% for k, v in extra.items() %}{% if v %}{{ k }}={{ v | urlencode }}&{% endif %}{% endfor %}{% endmacro %}
+<p><a href="/ui">← Experiments</a></p>
+<h1>Experiment <span class="mono">{{ exp.id[:12] }}</span> <span class="badge {{ summary.status }}">{{ summary.status }}</span></h1>
+<p class="muted">Dataset content <span class="mono">{{ exp.manifest.dataset_content_hash[:12] }}</span> ·
+split {{ exp.manifest.split }} · {{ exp.manifest.repetitions }} repetition(s) · {{ summary.planned_runs }} planned runs ·
+created {{ exp.created_at | when }} ·
+<a href="/experiments/{{ exp.id }}/export">JSON report</a> · <a href="/experiments/{{ exp.id }}/export?format=csv">CSV</a></p>
+
+{% if pairs %}<p>Compare:
+{% for base, cand in pairs %}<a href="/ui/compare?experiment_id={{ exp.id }}&baseline={{ base | urlencode }}&candidate={{ cand | urlencode }}">{{ cand }} vs {{ base }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+
+<h2>Scorecard</h2>
+<div class="card scroll"><table>
+<thead><tr><th>Configuration</th><th class="n">Verified success</th><th class="n">95% CI</th><th class="n">Strict success</th>
+<th class="n">Coverage</th><th class="n">Executed violations</th><th class="n">Unsafe attempts</th>
+<th class="n">Calls / run</th><th class="n">Useful calls</th><th class="n">Active latency (p95)</th><th class="n">Cost / success</th></tr></thead>
+<tbody>
+{% for name, c in cards.items() %}
+<tr><td class="mono">{{ name }}</td>
+<td class="n"><b>{{ c.headline.verified_success_rate | pct }}</b><br><span class="muted">{{ c.headline.passed_runs }} / {{ c.headline.scorable_runs }}</span></td>
+<td class="n">{% if c.headline.verified_success_ci95 %}{{ c.headline.verified_success_ci95[0] | pct(0) }}–{{ c.headline.verified_success_ci95[1] | pct(0) }}{% else %}<span class="muted" title="needs at least 2 scored tasks">—</span>{% endif %}</td>
+<td class="n">{{ c.headline.strict_end_to_end_success | pct }}<br><span class="muted">of {{ c.headline.planned_runs }}</span></td>
+<td class="n">{{ c.headline.evaluation_coverage | pct }}</td>
+<td class="n">{{ c.hard_violations.executed_violation_rate | pct }}</td>
+<td class="n">{{ c.hard_violations.unsafe_attempt_rate | pct }}</td>
+<td class="n">{{ c.tool_behavior.mean_calls_per_run | num(1) }}</td>
+<td class="n">{{ c.tool_behavior.useful_call_rate | pct }}</td>
+<td class="n">{{ (c.latency_seconds.active_execution or {}).get('p95') | secs }}</td>
+<td class="n">{% if c.cost.status == 'none_incurred' %}<span class="muted">n/a</span>{% elif c.cost.status == 'unknown' %}<span class="badge partial">unknown</span>{% else %}{{ c.cost.per_successful_run | money(c.cost.currency) }}{% endif %}</td></tr>
+{% endfor %}
+</tbody></table></div>
+<p class="muted">Unsafe attempt = a forbidden action was tried (possibly blocked). Executed violation = a forbidden effect actually happened.
+On access-boundary tasks an honest agent must try an order to learn it isn't theirs, so read executed violations there.</p>
+
+<h2>Success by category</h2>
+<div class="card scroll"><table>
+<thead><tr><th>Category</th>{% for name in cards %}<th class="n">{{ name }}</th>{% endfor %}</tr></thead><tbody>
+{% for cat in categories %}<tr><td>{{ cat }}</td>
+{% for name, c in cards.items() %}{% set g = c.by_category.get(cat) %}
+<td class="n">{% if g %}{{ g.verified_success | pct(0) }} <span class="muted">({{ g.passed }}/{{ g.scorable }})</span>{% else %}—{% endif %}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+
+<h2>Failure reasons</h2>
+<div class="grid">
+{% for name, c in cards.items() %}<div class="card"><h3 class="mono">{{ name }}</h3>
+{% if c.failure_reasons %}<table>{% for r in c.failure_reasons[:8] %}
+<tr><td class="mono">{{ r.reason }}</td><td class="n">{{ r.runs }}</td></tr>{% endfor %}</table>
+{% else %}<span class="muted">No failing checks.</span>{% endif %}</div>{% endfor %}
+</div>
+
+<h2>Usage</h2>
+<div class="card scroll"><table>
+<thead><tr><th>Configuration</th><th class="n">Attempts</th><th class="n">Retried / interrupted</th><th class="n">Model calls</th>
+<th class="n">Input tokens</th><th class="n">Output tokens</th><th class="n">Total cost</th><th>Queue p50 / active p50</th></tr></thead><tbody>
+{% for name, c in cards.items() %}<tr><td class="mono">{{ name }}</td>
+<td class="n">{{ c.usage.attempts }}</td><td class="n">{{ c.usage.retried_or_interrupted_attempts }}</td>
+<td class="n">{{ c.usage.model_calls }}{% if c.usage.unknown_usage_calls %} <span class="badge partial">{{ c.usage.unknown_usage_calls }} unknown</span>{% endif %}</td>
+<td class="n">{{ c.usage.input_tokens }}</td><td class="n">{{ c.usage.output_tokens }}</td>
+<td class="n">{% if c.cost.status == 'unknown' %}<span class="badge partial">unknown</span>{% elif c.cost.status == 'none_incurred' %}—{% else %}{{ c.cost.total | money(c.cost.currency) }}{% endif %}</td>
+<td>{{ (c.latency_seconds.queue or {}).get('p50') | secs }} / {{ (c.latency_seconds.active_execution or {}).get('p50') | secs }}</td></tr>{% endfor %}
+</tbody></table></div>
+
+<h2 id="runs">Runs <span class="muted">({{ total }})</span></h2>
+<div class="filters">
+<span class="muted">filter:</span>
+<a href="?">all</a>
+<a href="?{{ qs({'evaluation_status': 'fail', 'offset': ''}) }}">failed</a>
+<a href="?{{ qs({'evaluation_status': 'pass', 'offset': ''}) }}">passed</a>
+<a href="?{{ qs({'execution_status': 'infrastructure_error', 'offset': ''}) }}">infra errors</a>
+{% for name in cfg_ids %}<a href="?{{ qs({'config': name, 'offset': ''}) }}">{{ name }}</a>{% endfor %}
+{% for cat in categories %}<a href="?{{ qs({'category': cat, 'offset': ''}) }}">{{ cat }}</a>{% endfor %}
+</div>
+<div class="card scroll"><table>
+<thead><tr><th>Task</th><th>Category</th><th>Configuration</th><th class="n">Rep</th><th>Execution</th><th>Evaluation</th><th></th></tr></thead><tbody>
+{% for run, tv, cfg in runs %}<tr><td class="mono">{{ tv.task_id }}</td><td>{{ tv.category }}</td><td class="mono">{{ cfg.name }}</td>
+<td class="n">{{ run.repetition }}</td><td><span class="badge {{ run.execution_status }}">{{ run.execution_status }}</span></td>
+<td><span class="badge {{ run.evaluation_status }}">{{ run.evaluation_status }}</span></td>
+<td><a href="/ui/runs/{{ run.id }}">open →</a></td></tr>{% endfor %}
+</tbody></table></div>
+<p>{% if offset > 0 %}<a href="?{{ qs({'offset': (offset - page) if offset - page > 0 else ''}) }}#runs">← previous</a>{% endif %}
+{% if offset + page < total %}<a href="?{{ qs({'offset': offset + page}) }}#runs">next →</a>{% endif %}</p>
+{% endblock %}

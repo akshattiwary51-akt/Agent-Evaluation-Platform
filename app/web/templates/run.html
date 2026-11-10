@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Run {{ run.id[:8] }}{% endblock %}
+{% block content %}
+<p><a href="/ui/experiments/{{ run.experiment_id }}#runs">← Experiment {{ run.experiment_id[:10] }}</a></p>
+<h1>{{ tv.task_id }} <span class="muted">·</span> <span class="mono">{{ cfg.name }}</span></h1>
+<p><span class="badge {{ run.execution_status }}">execution: {{ run.execution_status }}</span>
+<span class="badge {{ run.evaluation_status }}">evaluation: {{ run.evaluation_status }}</span>
+<span class="muted">category {{ tv.category }} · repetition {{ run.repetition }}</span></p>
+
+{% if attempts | length > 1 %}<div class="warn"><b>{{ attempts | length }} attempts.</b> Only the final attempt is scored; earlier ones were interrupted or hit infrastructure errors.
+{% for a in attempts %}<a href="?attempt={{ a.id }}">#{{ a.attempt_number }} ({{ a.execution_status }}{% if a.id == run.final_attempt_id %}, counted{% endif %})</a>{% if not loop.last %} · {% endif %}{% endfor %}</div>{% endif %}
+{% if shown and not is_final %}<div class="warn">Showing attempt #{{ shown.attempt_number }}, which is <b>not</b> the counted result.</div>{% endif %}
+
+<div class="grid" style="margin-top:14px">
+<div class="visible-panel"><h3>What the agent saw</h3>
+<p style="margin:4px 0"><b>Customer</b> <span class="mono">{{ tv.agent_input.authenticated_customer_id }}</span> · <b>Ticket</b> <span class="mono">{{ tv.agent_input.ticket_id }}</span></p>
+<blockquote style="margin:6px 0;padding-left:10px;border-left:3px solid var(--line)">{{ tv.agent_input.user_message }}</blockquote>
+<p class="muted" style="margin:4px 0">Everything else it learned came from tool calls.</p></div>
+<div class="hidden-panel"><h3>Hidden ground truth — never shown to the agent</h3>
+<details open><summary>Expected outcome &amp; checks</summary><pre>{{ tv.evaluation_spec | tojson(indent=2) }}</pre></details>
+<details><summary>Environment fixture</summary><pre>{{ tv.environment_fixture | tojson(indent=2) }}</pre></details></div>
+</div>
+
+<h2>Final response</h2>
+<div class="card">{% if shown and shown.final_response %}{{ shown.final_response }}{% else %}<span class="muted">(none)</span>{% endif %}
+{% if shown and shown.stop_reason %}<div class="muted">stop reason: {{ shown.stop_reason }}</div>{% endif %}</div>
+
+<h2>Evaluator findings</h2>
+{% if scores %}<div class="card scroll"><table>
+<thead><tr><th>Evaluator</th><th>Check</th><th>Status</th><th>Reason</th><th>Evidence</th></tr></thead><tbody>
+{% for sc in scores %}<tr><td>{{ sc.evaluator_name }}<span class="muted"> {{ sc.evaluator_version }}</span></td><td class="mono">{{ sc.dimension }}</td>
+<td><span class="badge {{ sc.status }}">{{ sc.status }}</span></td><td class="mono">{{ sc.reason_code or '' }}</td>
+<td><details><summary>show</summary><pre>{{ sc.evidence | tojson(indent=2) }}</pre></details></td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<div class="card muted">No scores: this attempt was not scored (e.g. infrastructure error, interrupted, or cancelled).</div>{% endif %}
+
+<h2>Final-state differences</h2>
+{% if diff %}<div class="card scroll"><table><thead><tr><th>Entity</th><th>Field</th><th>Before</th><th>After</th></tr></thead><tbody>
+{% for d in diff %}<tr><td>{{ d.entity }}</td><td class="mono">{{ d.field }}</td><td class="mono">{{ d.before if d.before is not none else '—' }}</td><td class="mono"><b>{{ d.after }}</b></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="card muted">No state changes (the agent changed nothing).</div>{% endif %}
+
+<h2>Trace <span class="muted">({{ timeline | length }} events, {{ n_tools }} tool calls)</span></h2>
+{% if timeline %}<div class="card scroll"><table>
+<thead><tr><th class="n">+ms</th><th>Event</th><th>Status</th><th class="n">Duration</th><th>Payload</th></tr></thead><tbody>
+{% for t in timeline %}<tr><td class="n mono">{{ '%.0f' % t.offset_ms }}</td><td class="mono">{{ t.e.event_type }}</td>
+<td>{% if t.e.status %}<span class="badge {{ t.e.status }}">{{ t.e.status }}</span>{% endif %}</td>
+<td class="n">{{ (t.e.duration_ms | float / 1000) | secs if t.e.duration_ms is not none else '—' }}</td>
+<td><details><summary>show</summary><pre>{{ t.e.payload | tojson(indent=2) }}</pre></details></td></tr>{% endfor %}
+</tbody></table></div>
+<p class="muted">Tool results and state changes are recorded; private model reasoning is not.</p>
+{% else %}<div class="card muted">No trace was persisted for this attempt (a killed worker loses in-flight events).</div>{% endif %}
+{% endblock %}

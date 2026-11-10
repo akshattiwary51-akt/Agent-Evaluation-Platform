@@ -1,0 +1,15 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-agent-evaluation-platform-namespace.yaml
+    - api-deployment.yaml
+    - api-expose.yaml
+    - api-service.yaml
+    - backend-network-policy.yaml
+    - migrate-deployment.yaml
+    - postgres-deployment.yaml
+    - postgres-expose.yaml
+    - postgres-pgdata-persistentVolumeClaim.yaml
+    - worker-deployment.yaml

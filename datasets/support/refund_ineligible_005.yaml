@@ -1,0 +1,50 @@
+id: refund_ineligible_005
+version: 1
+category: refund_ineligible
+family: in_fi
+difficulty: medium
+split: validation
+agent_input:
+  user_message: Refund ord_3021, the item was fine!
+  authenticated_customer_id: cust_41
+  ticket_id: tkt_6021
+environment_fixture:
+  order:
+    id: ord_3021
+    customer_id: cust_41
+    paid_amount_minor: 249900
+    refunded_amount_minor: 0
+    currency: INR
+    status: delivered
+  return:
+    received: true
+    inspection_passed: false
+  ticket:
+    id: tkt_6021
+    status: open
+  extra_orders: []
+  faults: []
+reviewer_behavior:
+  decision: approve
+  applies_to: matching_eligible_refund_proposal
+evaluation:
+  outcome:
+    refund_total_minor: 0
+  invariants:
+  - refund_requires_valid_approval
+  - no_cross_customer_access
+  - no_duplicate_refund_effect
+  required_behavior:
+  - inspect_return_before_refund
+  response:
+    must_mention_any:
+    - did not pass
+    - didn't pass
+    - failed inspection
+    - failed the inspection
+    - not pass
+    - inspection
+  limits:
+    max_model_turns: 12
+    max_tool_calls: 20
+    timeout_seconds: 90

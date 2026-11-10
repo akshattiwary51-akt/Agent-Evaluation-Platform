@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Agent Evaluation{% endblock %} · Agent Evaluation Platform</title>
+<style>
+:root{--bg:#f7f7f5;--surface:#fff;--ink:#1c1c1a;--muted:#6b6b66;--line:#e3e2dd;--accent:#2a5bd7;
+--good:#17784a;--good-bg:#e4f4ec;--bad:#b42318;--bad-bg:#fdeceb;--warn:#8a5a00;--warn-bg:#fdf3dc;
+--hidden:#5b3d9e;--hidden-bg:#f0ebfa;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141413;--surface:#1d1d1b;
+--ink:#ecebe6;--muted:#9a9a93;--line:#34342f;--accent:#7aa2ff;--good:#5fd49b;--good-bg:#173226;
+--bad:#ff8a80;--bad-bg:#3a1c1a;--warn:#f0c15a;--warn-bg:#35290f;--hidden:#c3a6ff;--hidden-bg:#2a2140}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--surface);border-bottom:1px solid var(--line)}
+header div{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;gap:20px;align-items:baseline;flex-wrap:wrap}
+header b{font-size:16px}header a{color:var(--muted);text-decoration:none}header a:hover{color:var(--ink)}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:4px 0 4px}h2{font-size:17px;margin:28px 0 8px}h3{font-size:14px;margin:0 0 6px}
+a{color:var(--accent)}.muted{color:var(--muted)}.mono{font-family:var(--mono);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;
+border:1px solid var(--line);white-space:nowrap}
+.pass,.completed,.improved{color:var(--good);background:var(--good-bg);border-color:transparent}
+.fail,.regressed,.infrastructure_error,.evaluation_error{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+.partial,.running,.queued,.pending,.interrupted,.cancelled,.timed_out,.budget_exceeded,.not_comparable,.cancelling{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.bar{height:8px;background:var(--line);border-radius:4px;min-width:80px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good)}
+.hidden-panel{border:2px dashed var(--hidden);background:var(--hidden-bg);border-radius:10px;padding:12px 16px}
+.hidden-panel h3{color:var(--hidden)}.visible-panel{border:2px solid var(--accent);border-radius:10px;padding:12px 16px;background:var(--surface)}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;overflow:auto;
+font:12px/1.45 var(--mono);margin:6px 0;max-height:320px}
+details summary{cursor:pointer;color:var(--accent);font-size:13px}
+.warn{border-left:4px solid var(--warn);background:var(--warn-bg);padding:8px 12px;border-radius:6px;margin:8px 0}
+.err{border-left:4px solid var(--bad);background:var(--bad-bg);padding:8px 12px;border-radius:6px;margin:8px 0}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.filters a{padding:2px 10px;border:1px solid var(--line);border-radius:99px;text-decoration:none;font-size:13px}
+.delta-good{color:var(--good);font-weight:600}.delta-bad{color:var(--bad);font-weight:600}
+.kpi{font-size:26px;font-weight:650;line-height:1.1}.kpi small{font-size:12px;font-weight:500;color:var(--muted);display:block}
+@media(max-width:600px){main{padding:14px 12px 50px}.kpi{font-size:22px}}
+</style>
+</head>
+<body>
+<header><div><b>Agent Evaluation</b><a href="/ui">Experiments</a><a href="/ui/benchmarks">Benchmarks</a>
+<a href="/docs">API</a></div></header>
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>

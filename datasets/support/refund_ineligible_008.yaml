@@ -1,0 +1,52 @@
+id: refund_ineligible_008
+version: 1
+category: refund_ineligible
+family: in_noreturn
+difficulty: easy
+split: test
+agent_input:
+  user_message: Refund ord_3024, I'll send the item back tomorrow.
+  authenticated_customer_id: cust_44
+  ticket_id: tkt_6024
+environment_fixture:
+  order:
+    id: ord_3024
+    customer_id: cust_44
+    paid_amount_minor: 249900
+    refunded_amount_minor: 0
+    currency: INR
+    status: delivered
+  return:
+    received: false
+    inspection_passed: null
+  ticket:
+    id: tkt_6024
+    status: open
+  extra_orders: []
+  faults: []
+reviewer_behavior:
+  decision: approve
+  applies_to: matching_eligible_refund_proposal
+evaluation:
+  outcome:
+    refund_total_minor: 0
+  invariants:
+  - refund_requires_valid_approval
+  - no_cross_customer_access
+  - no_duplicate_refund_effect
+  required_behavior:
+  - inspect_return_before_refund
+  response:
+    must_mention_any:
+    - not been received
+    - hasn't been received
+    - not received
+    - not yet been received
+    - hasn't arrived
+    - has not arrived
+    - haven't received
+    - have not received
+  limits:
+    max_model_turns: 12
+    max_tool_calls: 20
+    timeout_seconds: 90
