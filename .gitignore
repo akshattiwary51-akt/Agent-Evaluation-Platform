@@ -1,5 +1,92 @@
-__pycache__/
-*.egg-info/
-.pytest_cache/
-.venv/
+
+# ==============================
+# Environment variables & secrets
+# ==============================
 .env
+.env.*
+!.env.example
+!.env.template
+
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# ==============================
+# Testing & coverage
+# ==============================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+test-results/
+coverage.xml
+
+# ==============================
+# Code quality tools
+# ==============================
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.dmypy.json
+
+# ==============================
+# Database & local data
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+
+# ==============================
+# IDE & editors
+# ==============================
+.vscode/
+.idea/
+*.sublime-workspace
+*.swp
+*.swo
+
+# ==============================
+# Operating system
+# ==============================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# Temporary files
+# ==============================
+*.tmp
+*.bak
+*.orig
